@@ -1,0 +1,198 @@
+let droparea = document.querySelector("#droparea");
+
+// Make the drop area show pretty hover highlights
+droparea.addEventListener('dragenter', evt => {
+  droparea.classList.add('hover');
+  evt.preventDefault();
+});
+droparea.addEventListener('dragover', evt => {
+  evt.preventDefault();
+});
+droparea.addEventListener('dragleave', evt => {
+  droparea.classList.remove('hover');
+  evt.preventDefault();
+});
+
+let recentResult = new Data(null);
+
+// Capture the data and transform the dataTransfer into a result object
+droparea.addEventListener('drop', e => {
+  droparea.classList.remove('hover');
+  recentResult.set(dataTransferToResult(e.dataTransfer, "drop"));
+  e.preventDefault();
+});
+
+document.addEventListener('paste', e => {
+  recentResult.set(dataTransferToResult(e.clipboardData, "paste"));
+});
+
+
+let e10s = new Data(true);
+let os = new Data("windows");
+if (/Linux/.test(navigator.userAgent)) {
+  os.set("linux");
+} else if (/Macintosh/.test(navigator.userAgent)) {
+  os.set("mac");
+}
+
+let currentTest = new Data(null);
+
+react(document.querySelector("#testlist"), () => {
+  return tests.map(test => {
+    let attrs = {
+      onclick: () => currentTest.set(test),
+      href: "#",
+    };
+    let ct = currentTest.get();
+    if (ct && ct.name == test.name) {
+      attrs.style = "color: red; font-weight: bold; text-decoration: none;";
+    }
+    return N("li", N("a", attrs, test.name));
+  });
+});
+
+react(document.querySelector("#description"), () =>
+      currentTest.get() ? currentTest.get().description : "NO TEST SELECTED");
+
+const merge = (a, b) => {
+  console.log(b);
+  Object.keys(b).forEach(k => {
+    // We want to concat the bugs lists together
+    if (k == "bugs") {
+      a[k] = a[k].concat(b[k]);
+      return;
+    }
+    a[k] = b[k];
+  });
+};
+
+const getResult = (test, os, multi) => {
+  console.log("test = " + test);
+  let result = { bugs: [] };
+  merge(result, test);
+
+  if (os in test) {
+    merge(result, getResult(test[os], os, multi));
+  }
+  let multiStr = multi ? 'multi' : 'single';
+  if (multiStr in test) {
+    merge(result, getResult(test[multiStr], os, multi));
+  }
+  console.log("result = ", result);
+  return result;
+};
+
+
+const dataTransferToResult = (dt, kind) => {
+  let types = [];
+  for (let i = 0; i < dt.types.length; ++i) {
+    types.push(dt.types[i]);
+  }
+
+  let items = [];
+  for (let i = 0; i < dt.items.length; ++i) {
+    ((i) => {
+      let item = {
+        kind: dt.items[i].kind,
+        type: dt.items[i].type,
+        data: new Data(null),
+      };
+      if (item.kind == "file") {
+        item.data.set(dt.items[i].getAsFile());
+      } else {
+        dt.items[i].getAsString(s => item.data.set(s));
+      }
+      items.push(item);
+    })(i);
+  }
+
+  return {
+    types: types,
+    files: dt.files.length,
+    items: items,
+    kind: kind,
+  };
+};
+
+const displayResult = result => {
+  if (!result) {
+    return "No results...";
+  }
+  result = getResult(result, os.get(), e10s.get());
+
+  return "kind: " + result.kind + "\n\n" +
+    "types:\n" + result.types.map((item, i) => "  [" + i + "] " + item).join('\n') + "\n\n" +
+    "file count: " + result.files + "\n\n" +
+    "items:\n" +
+    result.items.map((item, i) => "  [" + i + "] " + item.kind + " - " + item.type).join('\n');
+};
+
+react(document.querySelector("#matching"), () => {
+  if (displayResult(currentTest.get()) == displayResult(recentResult.get())) {
+    return N("div", {style: "color: green;"}, "MATCHING");
+  } else {
+    return N("div", {style: "color: red;"}, "NOT MATCHING");
+  }
+});
+
+// Display a textual representation of the different results
+react(document.querySelector("#expected"), () => displayResult(currentTest.get()));
+react(document.querySelector("#got"), () => displayResult(recentResult.get()));
+
+// Display the data which was found in each of the DataTransferItems
+react(document.querySelector("#data"), () => {
+  let rr = recentResult.get();
+  if (!rr) {
+    return "pending..";
+  }
+  return recentResult.get().items.map((item, i) => {
+    let data = item.data.get();
+
+    let result = ["items[" + i + "] = "];
+    if (!data) {
+      result.push("null");
+    } else if (typeof data == "string") {
+      result.push(N("pre", data));
+    } else {
+      result.push(N("img", {src: URL.createObjectURL(data)}, []));
+    }
+    return N("li", result);
+  });
+});
+
+const bugzillaLink = number => {
+  return N("p", N("a", { href: "https://bugzil.la/" + number }, "" + number));
+};
+
+react(document.querySelector("#bugs"), () => {
+  let combos = [
+    ["linux", true],
+    ["linux", false],
+    ["windows", true],
+    ["windows", false],
+    ["mac", true],
+    ["mac", false],
+  ];
+
+  let ct = currentTest.get();
+  return N("tr", combos.map(combo => {
+    let result = { bugs: [] };
+    if (ct) {
+      result = getResult(ct, combo[0], combo[1]);
+    }
+    let attrs = {};
+    if (combo[0] == os.get() && combo[1] == e10s.get()) {
+      attrs['class'] = "active";
+    }
+    return N("td", attrs, [
+      N("button", {
+        onclick: () => {
+          os.set(combo[0]);
+          e10s.set(combo[1]);
+        }
+      }, combo[0] + " - " + (combo[1] ? "e10s" : "non-e10s")),
+      N("p", ["Bugs"].concat(result.bugs.map(bugzillaLink))),
+      // N("div", result.bugs.map(bugzillaLink)),
+    ]);
+  }));
+});
