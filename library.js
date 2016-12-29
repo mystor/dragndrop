@@ -90,20 +90,22 @@ const dataTransferToResult = (dt, kind) => {
   }
 
   let items = [];
-  for (let i = 0; i < dt.items.length; ++i) {
-    ((i) => {
-      let item = {
-        kind: dt.items[i].kind,
-        type: dt.items[i].type,
-        data: new Data(null),
-      };
-      if (item.kind == "file") {
-        item.data.set(dt.items[i].getAsFile());
-      } else {
-        dt.items[i].getAsString(s => item.data.set(s));
-      }
-      items.push(item);
-    })(i);
+  if (dt.items) {
+    for (let i = 0; i < dt.items.length; ++i) {
+      ((i) => {
+        let item = {
+          kind: dt.items[i].kind,
+          type: dt.items[i].type,
+          data: new Data(null),
+        };
+        if (item.kind == "file") {
+          item.data.set(dt.items[i].getAsFile());
+        } else {
+          dt.items[i].getAsString(s => item.data.set(s));
+        }
+        items.push(item);
+      })(i);
+    }
   }
 
   return {
@@ -124,7 +126,7 @@ const displayResult = result => {
     "types:\n" + result.types.map((item, i) => "  [" + i + "] " + item).join('\n') + "\n\n" +
     "file count: " + result.files + "\n\n" +
     "items:\n" +
-    result.items.map((item, i) => "  [" + i + "] " + item.kind + " - " + item.type).join('\n');
+    (result.items || []).map((item, i) => "  [" + i + "] " + item.kind + " - " + item.type).join('\n');
 };
 
 react(document.querySelector("#matching"), () => {
@@ -145,7 +147,7 @@ react(document.querySelector("#data"), () => {
   if (!rr) {
     return "pending..";
   }
-  return recentResult.get().items.map((item, i) => {
+  return (recentResult.get().items || []).map((item, i) => {
     let data = item.data.get();
 
     let result = ["items[" + i + "] = "];
