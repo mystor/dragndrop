@@ -130,10 +130,28 @@ const displayResult = result => {
 };
 
 react(document.querySelector("#matching"), () => {
-  if (displayResult(currentTest.get()) == displayResult(recentResult.get())) {
+  // Check if we are expecting a match or not.
+  let expectMatch = true;
+  let reason = [];
+  if (currentTest.get()) {
+    let current = getResult(currentTest.get(), os.get(), e10s.get());
+    if ("expectMatch" in current) {
+      expectMatch = current.expectMatch;
+    }
+    if (current.bugs) {
+      reason = current.bugs.map(bugzillaLink);
+    }
+  }
+  let match = displayResult(currentTest.get()) == displayResult(recentResult.get());
+  if (match && expectMatch) {
     return N("div", {style: "color: green;"}, "MATCHING");
-  } else {
+  } else if (!match && expectMatch) {
     return N("div", {style: "color: red;"}, "NOT MATCHING");
+  } else if (match && !expectMatch) {
+    return N("div", {style: "color: red;"}, "MATCHING");
+  } else if (!match && !expectMatch) {
+    return N("div", {style: "color: orange;"},
+             ["NOT MATCHING ("].concat(reason).concat([")"]));
   }
 });
 
@@ -163,7 +181,7 @@ react(document.querySelector("#data"), () => {
 });
 
 const bugzillaLink = number => {
-  return N("p", N("a", { href: "https://bugzil.la/" + number }, "" + number));
+  return N("a", { href: "https://bugzil.la/" + number }, "" + number);
 };
 
 react(document.querySelector("#bugs"), () => {
@@ -193,7 +211,7 @@ react(document.querySelector("#bugs"), () => {
           e10s.set(combo[1]);
         }
       }, combo[0] + " - " + (combo[1] ? "e10s" : "non-e10s")),
-      N("p", ["Bugs"].concat(result.bugs.map(bugzillaLink))),
+      N("p", ["Bugs"].concat(result.bugs.map(bugzillaLink).map(x => N("p", x)))),
       // N("div", result.bugs.map(bugzillaLink)),
     ]);
   }));
