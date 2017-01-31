@@ -100,6 +100,25 @@ const dataTransferToResult = (dt, kind) => {
         };
         if (item.kind == "file") {
           item.data.set(dt.items[i].getAsFile());
+          try {
+            let entry = dt.items[i].webkitGetAsEntry();
+            console.log("entry = ", entry);
+            if (entry.isDirectory) {
+              entry.createReader().readEntries(entries => {
+                let files = [];
+                entries.forEach(entry => {
+                  console.log("entry = ", entry);
+                  if (entry.isFile) {
+                    entry.file(file => {
+                      files = files.concat([file]);
+                      item.data.set(files);
+                    });
+                  }
+                });
+                item.data.set(files);
+              });
+            }
+          } catch (e) { console.error(e); }
         } else {
           dt.items[i].getAsString(s => item.data.set(s));
         }
@@ -173,6 +192,10 @@ react(document.querySelector("#data"), () => {
       result.push("null");
     } else if (typeof data == "string") {
       result.push(N("pre", data));
+    } else if (Array.isArray(data)) {
+      data.forEach(data => {
+        result.push(N("img", {src: URL.createObjectURL(data)}, []));
+      });
     } else {
       result.push(N("img", {src: URL.createObjectURL(data)}, []));
     }
