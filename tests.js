@@ -12,21 +12,35 @@
 
 let tests = [
   {
-    name: "drop-file",
+    name: "drop-txt-file",
     kind: "drop",
-    description: "Drag and drop a non-image file from the desktop to the drop area.",
+    description: "Drag and drop a text file from the desktop to the drop area.",
     types: [
       "application/x-moz-file",
       "Files",
     ],
     files: 1,
     items: [
-      { kind: "file", type: "application/x-moz-file" }
+      { kind: "file", type: "text/plain" }
     ],
   },
 
   {
-    name: "drop-image-file",
+    name: "drop-pdf-file",
+    kind: "drop",
+    description: "Drag and drop a pdf file from the desktop to the drop area.",
+    types: [
+      "application/x-moz-file",
+      "Files",
+    ],
+    files: 1,
+    items: [
+      { kind: "file", type: "application/pdf" }
+    ],
+  },
+
+  {
+    name: "drop-png-file",
     kind: "drop",
     description: "Drag and drop an PNG image file from the desktop to the drop area.",
     types: [
@@ -35,7 +49,21 @@ let tests = [
     ],
     files: 1,
     items: [
-      { kind: "file", type: "application/x-moz-file" }
+      { kind: "file", type: "image/png" }
+    ],
+  },
+
+  {
+    name: "drop-jpeg-file",
+    kind: "drop",
+    description: "Drag and drop a JPEG image file from the desktop to the drop area.",
+    types: [
+      "application/x-moz-file",
+      "Files",
+    ],
+    files: 1,
+    items: [
+      { kind: "file", type: "image/jpeg" }
     ],
   },
 
@@ -98,9 +126,9 @@ let tests = [
   },
 
   {
-    name: "paste-file",
+    name: "paste-txt-file",
     kind: "paste",
-    description: "Copy and paste a non-image file from the desktop into this page.",
+    description: "Copy and paste a text file from the desktop onto this page.",
     types: [
       "application/x-moz-file",
       "Files",
@@ -110,14 +138,14 @@ let tests = [
     mac: { bugs: [1288773], expectMatch: false },
     linux: { bugs: [1288773], expectMatch: false },
     items: [
-      { kind: "file", type: "application/x-moz-file" }
+      { kind: "file", type: "text/plain" }
     ],
   },
 
   {
-    name: "paste-image-file",
+    name: "paste-pdf-file",
     kind: "paste",
-    description: "Copy and paste an PNG image file from the desktop into this page.",
+    description: "Copy and paste a pdf file from the desktop onto this page.",
     types: [
       "application/x-moz-file",
       "Files",
@@ -127,14 +155,48 @@ let tests = [
     mac: { bugs: [1288773], expectMatch: false },
     linux: { bugs: [1288773], expectMatch: false },
     items: [
-      { kind: "file", type: "application/x-moz-file" }
+      { kind: "file", type: "application/pdf" }
+    ],
+  },
+
+  {
+    name: "paste-png-file",
+    kind: "paste",
+    description: "Copy and paste a PNG image file from the desktop onto this page.",
+    types: [
+      "application/x-moz-file",
+      "Files",
+    ],
+    files: 1,
+    windows: { multi: { bugs: [1308007], expectMatch: false } },
+    mac: { bugs: [1288773], expectMatch: false },
+    linux: { bugs: [1288773], expectMatch: false },
+    items: [
+      { kind: "file", type: "image/png" }
+    ],
+  },
+
+  {
+    name: "paste-jpeg-file",
+    kind: "paste",
+    description: "Copy and paste a JPEG image file from the desktop onto this page.",
+    types: [
+      "application/x-moz-file",
+      "Files",
+    ],
+    files: 1,
+    windows: { multi: { bugs: [1308007], expectMatch: false } },
+    mac: { bugs: [1288773], expectMatch: false },
+    linux: { bugs: [1288773], expectMatch: false },
+    items: [
+      { kind: "file", type: "image/jpeg" }
     ],
   },
 
   {
     name: "paste-image-data",
     kind: "paste",
-    description: "Copy and paste an PNG image file from another tab into this page.",
+    description: "Copy and paste an image (right click -> Copy Image) from another tab into this page.",
     types: [
       "text/html",
       "Files",
@@ -145,4 +207,19 @@ let tests = [
       { kind: "file", type: "image/png" }
     ],
   },
+
+  {
+    name: "paste-html-data",
+    kind: "paste",
+    description: "Copy and paste html from another tab onto this page.",
+    types: [
+      "text/html",
+      "text/plain",
+    ],
+    files: 0,
+    items: [
+      { kind: "string", type: "text/html" },
+      { kind: "string", type: "text/plain" },
+    ]
+  }
 ];
