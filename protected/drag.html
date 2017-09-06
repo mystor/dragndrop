@@ -1,0 +1,71 @@
+<style>
+  .drag {
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    color: #fff;
+    background-color: #f00;
+  }
+  .drop {
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    color: #fff;
+    background-color: #00f;
+  }
+</style>
+
+<div><a href="paste.html">paste tests</a></div>
+
+<h3>Instructions</h3>
+<p>
+  Drag the box labeled "drag" to the box labeled "drop" and release. If the background color changes to a light red, then the test failed. If the background is a light green then it passed.
+</p>
+
+<div class="drag" draggable="true">drag</div>
+<div class="drop" >drop</div>
+
+<div class="results">
+</div>
+
+<script src="test.js"></script>
+<script>
+  let drag_dt = null;
+  let over_dt = null;
+  let drop_dt = null;
+  document.body.addEventListener('dragstart', e => {
+    failed = false;
+    drag_dt = e.dataTransfer;
+    over_dt = null;
+    drop_dt = null;
+    drag_dt.setData(MIME, "b");
+    eq(status(drag_dt), STATUS_READWRITE, "drag_dt must be readwrite during dragstart");
+  });
+  let drop = document.querySelector('.drop');
+  drop.addEventListener('dragover', e => {
+    if (!over_dt) {
+      over_dt = e.dataTransfer;
+      eq(status(drag_dt), STATUS_DISCONNECTED, "drag_dt mustbe disconnected during dragover");
+      eq(status(over_dt), STATUS_PROTECTED, "over_dt mustbe protected during dragover");
+      ok(drag_dt != over_dt, "drag_dt must be a different DataTransfer object than over_dt");
+    }
+    e.preventDefault();
+  });
+  drop.addEventListener('drop', e => {
+    drop_dt = e.dataTransfer;
+    eq(status(drag_dt), STATUS_DISCONNECTED, "drag_dt mustbe disconnected during drop");
+    eq(status(over_dt), STATUS_DISCONNECTED, "over_dt mustbe disconnected during drop");
+    eq(status(drop_dt), STATUS_READONLY, "drop_dt mustbe readonly during drop");
+    ok(drop_dt != over_dt, "drop_dt must be a different DataTransfer object than over_dt");
+    ok(drop_dt != drag_dt, "drop_dt must be a different DataTransfer object than drag_dt");
+    eq(drop_dt.getData(MIME), "b", "the data should have been persisted");
+    e.preventDefault();
+
+    setTimeout(() => {
+      eq(status(drag_dt), STATUS_DISCONNECTED, "drag_dt mustbe disconnected after drop");
+      eq(status(over_dt), STATUS_DISCONNECTED, "over_dt mustbe disconnected after drop");
+      eq(status(drop_dt), STATUS_DISCONNECTED, "drop_dt mustbe disconnected after drop");
+      done();
+    }, 0);
+  });
+</script>

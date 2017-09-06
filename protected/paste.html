@@ -1,0 +1,41 @@
+<div><a href="drag.html">drag tests</a></div>
+
+<h3>Instructions</h3>
+<p>
+  Select the text box and press Ctrl-C followed by Ctrl-V. If the background color changes to a light red, then the test failed. If the background is a light green then it passed.
+</p>
+
+<input type="text" class="input" value="text">
+
+<div class="results">
+</div>
+
+<script src="test.js"></script>
+<script>
+  let copy_dt = null;
+  let paste_dt = null;
+  document.querySelector('input').addEventListener('copy', e => {
+    failed = false;
+    copy_dt = e.clipboardData;
+    paste_dt = null;
+    ok(true, "here?");
+    copy_dt.setData(MIME, "b");
+    eq(status(copy_dt), STATUS_READWRITE, "copy_dt must be readwrite during copy");
+    e.preventDefault();
+  });
+  document.querySelector('input').addEventListener('paste', e => {
+    paste_dt = e.clipboardData;
+    eq(status(copy_dt), STATUS_DISCONNECTED, "copy_dt mustbe disconnected during paste");
+    eq(status(paste_dt), STATUS_READONLY, "paste_dt mustbe readonly during paste");
+    ok(copy_dt != paste_dt, "copy_dt must be a different DataTransfer object than paste_dt");
+    eq(paste_dt.getData(MIME), "b", "the data should have been persisted");
+    e.preventDefault();
+
+    setTimeout(() => {
+      eq(status(copy_dt), STATUS_DISCONNECTED, "copy_dt mustbe disconnected after paste");
+      eq(status(paste_dt), STATUS_DISCONNECTED, "paste_dt mustbe disconnected after paste");
+      done();
+    }, 0);
+
+  })
+</script>
