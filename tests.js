@@ -74,8 +74,8 @@ let tests = [
     files: 0,
 
     multi: {
-      mac: { bugs: [1328984], expectMatch: false },
-      linux: { bugs: [1328984], expectMatch: false }
+      bugs: [1328984],
+      expectMatch: false
     },
 
     types: [
